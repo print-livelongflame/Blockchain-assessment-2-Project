@@ -29,9 +29,18 @@ inver_B = Inventory(787435686772982288169641922308628444877260947, 1325305233886
 inver_C = Inventory(1014247300991039444864201518275018240361205111, 904030450302158058469475048755214591704639633,158749422015035388438057 )
 inver_D = Inventory(1287737200891425621338551020762858710281638317,1330909125725073469794953234151525201084537607, 33981230465225879849295979)
 
+
+# Initialsing keys
 private_key_A, public_key_A = inver_A.generate_keys()
-print(f"Private key is: {private_key_A}")
-print(f"Public key is: {public_key_A}")
+private_key_B, public_key_B = inver_B.generate_keys()
+private_key_C, public_key_C = inver_C.generate_keys()
+private_key_D, public_key_D = inver_D.generate_keys()
+
+# printing out public and private keys
+inver_A.info()
+inver_B.info()
+inver_C.info()
+inver_D.info()
     
 # Todo: • Derive any additional key components required for the digital signature process from the provided parameters, and ensure all required values are explicitly defined in your code.
 # Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.

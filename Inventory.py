@@ -43,10 +43,6 @@ class Inventory:
         self.q  =  q 
         self.e  =  e 
 
-    # Prints information of the object
-    def info(self):
-        print(f"\nThe keys of the invertory are: \n P: {self.p} \n Q: {self.q} \n E: {self.e}")
-    
     # Generates both public and private keys and returns them
     # Where the private key is: (n,d) and  the public key is: (n,e)
     def generate_keys(self):
@@ -70,6 +66,9 @@ class Inventory:
 
         return self.private_key,self.public_key
 
+    # Prints information of the object
+    def info(self):
+        print(f"\nThe keys of the invertory are: \n Private Key {self.private_key} \n Public Key: {self.public_key}")
 
 
 
