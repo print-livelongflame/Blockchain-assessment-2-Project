@@ -10,7 +10,6 @@ Also leave comments so other person knows what is happing within your code :)
 Note: When finsihed with the task just delete the "Todo" so we know its all done
 
 '''
-
 # ------ Part 1 ------ 
 '''
 Task1: 
@@ -74,3 +73,8 @@ securely delivered.
 # Todo: • In your report, explain how multi-signature verification and secure delivery mechanisms improve trust, accountability, and confidentiality in distributed inventory queries.
 
 
+# ----- Creating UI -------
+'''
+    We will need to create a ui allowing users to go to the different tasks and adding a record with some information and where we can hash and sign the data and 
+    create a verification allowing us to ensure the data went through
+'''
