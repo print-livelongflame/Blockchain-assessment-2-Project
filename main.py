@@ -43,12 +43,16 @@ private_key_D, public_key_D = inver_D.generate_keys()
 # inver_D.info_keys()
 
 # adding and printing a new record 
-example_record = Record()
-example_record.add_new_record("004","12","18", "A")
-inver_A.add_record(example_record)
+example_record1 = Record(4, "12", "18", "A")
+example_record2 = Record(3, "14", "18", "B")
+inver_A.add_record(example_record1)
+inver_A.add_record(example_record2)
 inver_A.info_records()
     
-# Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.
+# Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.(valentino)
+# signing the first record
+print(inver_A.sign_record(0))
+
 # Todo: • Implement a verification process that allows other inventory nodes to validate the authenticity and integrity of the received record before it proceeds to the consensus stage.
 # Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
 
