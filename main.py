@@ -49,7 +49,7 @@ inver_A.add_record(example_record1)
 inver_A.add_record(example_record2)
 inver_A.info_records()
     
-# Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.(valentino)
+#•  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.(valentino)
 # signing the first record
 print(inver_A.sign_record(0))
 
