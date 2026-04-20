@@ -20,30 +20,18 @@ the authenticity and integrity of the submitted data.
 '''
 # ---- Todos --------
 #• Initialise the cryptographic parameters required for digital signature operations using the values provided in the List of Keys document. (valentino)
-
-# We can create an object class where each invertory will have there values for p,q and e respectfully
-class Inventory:
-    # Initialises the object
-    def __init__(self, p , q , e):
-        self.p  =  p 
-        self.q  =  q 
-        self.e  =  e 
-
-    # Prints information of the object
-    def info(self):
-        print(f"\nThe keys of the invertory are: \n P: {self.p} \n Q: {self.q} \n E: {self.e}")
-
+from Inventory import Inventory
 
 # Initialising invertorys
 # Note: If u just want to use a variable you can do so by print(inver_A.p)
 inver_A =  Inventory(1210613765735147311106936311866593978079938707,1247842850282035753615951347964437248190231863, 815459040813953176289801)
-inver_A.info()
 inver_B = Inventory(787435686772982288169641922308628444877260947, 1325305233886096053310340418467385397239375379, 692450682143089563609787)
-inver_B.info()
 inver_C = Inventory(1014247300991039444864201518275018240361205111, 904030450302158058469475048755214591704639633,158749422015035388438057 )
-inver_C.info()
 inver_D = Inventory(1287737200891425621338551020762858710281638317,1330909125725073469794953234151525201084537607, 33981230465225879849295979)
-inver_D.info()
+
+private_key_A, public_key_A = inver_A.generate_keys()
+print(f"Private key is: {private_key_A}")
+print(f"Public key is: {public_key_A}")
     
 # Todo: • Derive any additional key components required for the digital signature process from the provided parameters, and ensure all required values are explicitly defined in your code.
 # Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.
