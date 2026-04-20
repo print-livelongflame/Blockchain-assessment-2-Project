@@ -135,8 +135,8 @@ class Inventory:
         print(f"\nThe keys of the invertory are: \n Private Key {self.private_key} \n Public Key: {self.public_key}")
 
     # prints out the records that the invertory has currently stored
-    def info_records(self):
-        print("\n========== INVENTORY RECORDS ==========")
+    def info_records(self, name):
+        print(f"\n========== INVENTORY {name} RECORDS ==========")
         print(f"{'Item ID':<10} {'QTY':<8} {'Price':<10} {'Location':<15}")
         print("-" * 40)
 
