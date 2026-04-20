@@ -19,7 +19,7 @@ the authenticity and integrity of the submitted data.
 '''
 # ---- Todos --------
 #• Initialise the cryptographic parameters required for digital signature operations using the values provided in the List of Keys document. (valentino)
-from Inventory import Inventory
+from Inventory import *
 
 # Initialising invertorys
 # Note: If u just want to use a variable you can do so by print(inver_A.p)
@@ -37,10 +37,16 @@ private_key_C, public_key_C = inver_C.generate_keys()
 private_key_D, public_key_D = inver_D.generate_keys()
 
 # printing out public and private keys
-inver_A.info()
-inver_B.info()
-inver_C.info()
-inver_D.info()
+# inver_A.info_keys()
+# inver_B.info_keys()
+# inver_C.info_keys()
+# inver_D.info_keys()
+
+# adding and printing a new record 
+example_record = Record()
+example_record.add_new_record("004","12","18", "A")
+inver_A.add_record(example_record)
+inver_A.info_records()
     
 # Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.
 # Todo: • Implement a verification process that allows other inventory nodes to validate the authenticity and integrity of the received record before it proceeds to the consensus stage.
