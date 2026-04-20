@@ -30,6 +30,7 @@ inver_C = Inventory(1014247300991039444864201518275018240361205111, 904030450302
 inver_D = Inventory(1287737200891425621338551020762858710281638317,1330909125725073469794953234151525201084537607, 33981230465225879849295979)
 
 
+# • Derive any additional key components required for the digital signature process from the provided parameters, and ensure all required values are explicitly defined in your code. (Valentino)
 # Initialsing keys
 private_key_A, public_key_A = inver_A.generate_keys()
 private_key_B, public_key_B = inver_B.generate_keys()
@@ -42,7 +43,6 @@ inver_B.info()
 inver_C.info()
 inver_D.info()
     
-# Todo: • Derive any additional key components required for the digital signature process from the provided parameters, and ensure all required values are explicitly defined in your code.
 # Todo: •  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.
 # Todo: • Implement a verification process that allows other inventory nodes to validate the authenticity and integrity of the received record before it proceeds to the consensus stage.
 # Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
