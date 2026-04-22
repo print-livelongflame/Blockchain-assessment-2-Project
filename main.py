@@ -53,11 +53,12 @@ inver_B.info_records()
 #•  Implement a mechanism that enables an inventory node to digitally sign a newly generated inventory record prior to submission.(valentino)
 # signing the first record example
 # print(inver_A.sign_record(inver_A.hash_record(0)))
-
+print(f"hashbing the record gives us: {inver_A.hash_record(0)}")
 # Todo: • Implement a verification process that allows other inventory nodes to validate the authenticity and integrity of the received record before it proceeds to the consensus stage. (valentino)
 inver_A.send_data_to(0,inver_B)
-#idea: We can send the data via a csv file called "Package_A".
-# then whoever reads the data just needs to read that csv file and then do the following processes
+inver_B.recevie_data_from("packageAtoB.txt",inver_A)
+
+inver_B.info_records()
 # Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
 
 '''

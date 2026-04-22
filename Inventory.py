@@ -1,36 +1,5 @@
 #------------- Helper functions ---------------------
 # function that takes in a string as input and converts it to an integer
-def string_to_int(message):
-    result = 0
-
-    for char in message:
-        # get ASCII value
-        ascii_val = ord(char)
-
-        # shift left by 8 bits and add new char
-        result = (result * 256) + ascii_val
-
-    return result
-
-# function that gets integer and converts to string
-def int_to_string(number):
-    chars = []
-
-    # if the number is 0
-    if number == 0:
-        return ""
-    
-    while number >0:
-        # get last byte 
-        ascii_value =  number % 256
-        chars.append(chr(ascii_value))
-
-        # shift to the right 1 byte
-        number //= 256
-
-    # Then build the string in reverse
-    chars.reverse()
-    return ''.join(chars)
 # GCD find the greatest common divisor between two variables and returns the result
 def gcd(a, b):
     while b != 0:
@@ -158,9 +127,15 @@ class Inventory:
         return self.signed_record
 
     # Verification checks if the signed hash is valid 
-    def verification(self):
-        #todo: got to finish this
-        pass
+    def verification(self, h1,  signed_message, e, n ):
+        h2  = pow(signed_message,e,n)
+
+        print(f"H1 is : {h1}\n compared to: {h2}")
+
+        if h1 == h2:
+            return True
+        else:
+            return False
     
     # Hashing the given record
     def hash_record(self,item_index):
@@ -171,7 +146,7 @@ class Inventory:
         return hashed_record
 
     # Sending the data to another inventory
-    def send_data_to(self, item_index, inventory_recevier_name):
+    def send_data_to(self, item_index, inventory_recevier):
         '''
         idea: 
         - we createa a main funciton where we take in the record we want to send and who we want to send to 
@@ -180,23 +155,21 @@ class Inventory:
         - then get the string of "message|signed message" and encrypt it with the receviers public key
         - then add that encyrpted message to a txt file called "package{self.name}to{receviers.name}
         '''
-        # creating a string for the singed record and oringinal message
-        package = f"{self.records[item_index]}|{self.sign_record(self.hash_record(item_index))}"    
 
-        # we will need to convert the string to its ineger eqv
-        package_integer = string_to_int(package)
         # Encryptiung the message
-        encrypted_message = self.encrypt(package_integer,inventory_recevier_name.e, inventory_recevier_name.n)
+        encrypted_message = self.encrypt(self.sign_record(self.hash_record(item_index)),inventory_recevier.e, inventory_recevier.n)
+        # creating a string for the singed record and oringinal message
+        package = f"{self.records[item_index].get_record()}|{encrypted_message}"    
+
         # creating txt file
-        filename = f"package{self.name}to{inventory_recevier_name.name}.txt"
+        filename = f"package{self.name}to{inventory_recevier.name}.txt"
         with open(filename,"w") as f:
-            f.write(str(encrypted_message))
+            f.write(str(package))
 
         print(f"Sent package: {filename}")
 
     # Reciving data 
-    def recevie_data_from(self,package_name):
-        # todo: read the file with the given package name. From there with the package name u can decrypt and the encryupted package and should get the message and signautre
+    def recevie_data_from(self,package_name, inventory_sender):
         '''
         idea:
         - Read the package with the specifc name 
@@ -207,6 +180,32 @@ class Inventory:
         - if return true then add the record 
         - else: reject the record
         '''
+        # first we will need to read the packaage
+        with open(package_name, "r") as f:
+            package_sent = f.read()
+
+        # we first need to spilt the data
+        package  = package_sent.split("|")
+        message =   package[0]
+        encrypted_message = int(package[1])
+
+        # then we can hash the message we got  and store it 
+        h1 =  hash(message)
+
+        # now we will need to decrypt the signed message
+        decrypted_messsage =  self.decrypt(encrypted_message,self.private_key[1],self.n)
+        print(f"the decrypted message is {decrypted_messsage}")
+
+        # then we can verify the signature placed on  the message
+        if self.verification(h1, decrypted_messsage,inventory_sender.e, inventory_sender.n):
+            print("Record verfied....\nAdding Record")
+        else:
+            print("Record Rejected!!!")
+
+        
+
+
+
 
         
     # Prints information of the keys of the object
