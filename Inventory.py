@@ -1,4 +1,21 @@
 #------------- Helper functions ---------------------
+# function that takes in a string as input and converts it to an integer
+def string_to_int(message):
+    result = 0
+
+    for char in message:
+        # get ASCII value
+        ascii_val = ord(char)
+
+        # shift left by 8 bits and add new char
+        result = (result * 256) + ascii_val
+
+    return result
+
+# function that gets integer and converts to string
+def int_to_string(number):
+    # todo: need to finish this off 
+    return -1 
 # GCD find the greatest common divisor between two variables and returns the result
 def gcd(a, b):
     while b != 0:
@@ -72,7 +89,8 @@ class Record:
 # We can create an object class where each invertory will have there values for p,q and e respectfully
 class Inventory:
     # Initialises the object
-    def __init__(self, p , q , e):
+    def __init__(self, p , q , e,name):
+        self.name = name
         self.p  =  p 
         self.q  =  q 
         self.e  =  e 
@@ -107,27 +125,74 @@ class Inventory:
         self.records.append(record)
         self.records = sort_records(self.records)
 
-    # encrypt any given records hash
-    # C = H(m)^e mod n
-    def encrypt(self, hashed_message):
-        return pow(hashed_message, self.e, self.n)
     
+    # function encrypts given messaage
+    # C = m^e mod n
+    def encrypt(self,value,e,n):
+        return  pow(value,e,n)
+
     # decrypt a given encrypted message 
     # H(m) = C^d mod n
-    def decrypt(self,encrypted_message):
-        return pow(encrypted_message, self.private_key[1], self.n)
+    def decrypt(self,value,d,n):
+        return pow(value,d,n)
 
     # Signing the message record we get
     # S = H(m)^d mod n
-    def sign_record(self,item_index):
+    def sign_record(self, hashed_record):
+        self.signed_record = pow(hashed_record, self.private_key[1], self.n)
+        return self.signed_record
+
+    # Verification checks if the signed hash is valid 
+    def verification(self):
+        #todo: got to finish this
+        pass
+    
+    # Hashing the given record
+    def hash_record(self,item_index):
         # we first get the chosen record as a string
         record = self.records[item_index].get_record()
-
         # then we need to hash the record (function returns 32 length hash)
-        self.hashed_record = hash(record)
+        hashed_record = hash(record)
+        return hashed_record
 
-        self.signed_record = pow(self.hashed_record, self.private_key[1], self.n)
-        return self.signed_record
+    # Sending the data to another inventory
+    def send_data_to(self, item_index, inventory_recevier_name):
+        '''
+        idea: 
+        - we createa a main funciton where we take in the record we want to send and who we want to send to 
+        - then we hash it 
+        - sign it
+        - then get the string of "message|signed message" and encrypt it with the receviers public key
+        - then add that encyrpted message to a txt file called "package{self.name}to{receviers.name}
+        '''
+        # creating a string for the singed record and oringinal message
+        package = f"{self.records[item_index]}|{self.sign_record(self.hash_record(item_index))}"    
+
+        # we will need to convert the string to its ineger eqv
+        package_integer = string_to_int(package)
+        # Encryptiung the message
+        encrypted_message = self.encrypt(package_integer,inventory_recevier_name.e, inventory_recevier_name.n)
+        #todo: send encryupted message to txtfile
+
+
+
+        pass
+
+    # Reciving data 
+    def recevie_data_from(self,package_name):
+        # todo: read the file with the given package name. From there with the package name u can decrypt and the encryupted package and should get the message and signautre
+        '''
+        idea:
+        - Read the package with the specifc name 
+        - decryupt the message with private key
+        - spilt the data into two different segments "|"
+        - hash the message
+        - call verification (hash of message)
+        - if return true then add the record 
+        - else: reject the record
+        
+        '''
+        pass
 
         
     # Prints information of the keys of the object
@@ -135,8 +200,8 @@ class Inventory:
         print(f"\nThe keys of the invertory are: \n Private Key {self.private_key} \n Public Key: {self.public_key}")
 
     # prints out the records that the invertory has currently stored
-    def info_records(self, name):
-        print(f"\n========== INVENTORY {name} RECORDS ==========")
+    def info_records(self):
+        print(f"\n========== INVENTORY {self.name} RECORDS ==========")
         print(f"{'Item ID':<10} {'QTY':<8} {'Price':<10} {'Location':<15}")
         print("-" * 40)
 
