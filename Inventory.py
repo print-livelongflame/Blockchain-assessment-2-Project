@@ -14,8 +14,23 @@ def string_to_int(message):
 
 # function that gets integer and converts to string
 def int_to_string(number):
-    # todo: need to finish this off 
-    return -1 
+    chars = []
+
+    # if the number is 0
+    if number == 0:
+        return ""
+    
+    while number >0:
+        # get last byte 
+        ascii_value =  number % 256
+        chars.append(chr(ascii_value))
+
+        # shift to the right 1 byte
+        number //= 256
+
+    # Then build the string in reverse
+    chars.reverse()
+    return ''.join(chars)
 # GCD find the greatest common divisor between two variables and returns the result
 def gcd(a, b):
     while b != 0:
@@ -172,11 +187,12 @@ class Inventory:
         package_integer = string_to_int(package)
         # Encryptiung the message
         encrypted_message = self.encrypt(package_integer,inventory_recevier_name.e, inventory_recevier_name.n)
-        #todo: send encryupted message to txtfile
+        # creating txt file
+        filename = f"package{self.name}to{inventory_recevier_name.name}.txt"
+        with open(filename,"w") as f:
+            f.write(str(encrypted_message))
 
-
-
-        pass
+        print(f"Sent package: {filename}")
 
     # Reciving data 
     def recevie_data_from(self,package_name):
@@ -190,9 +206,7 @@ class Inventory:
         - call verification (hash of message)
         - if return true then add the record 
         - else: reject the record
-        
         '''
-        pass
 
         
     # Prints information of the keys of the object
