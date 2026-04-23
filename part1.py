@@ -38,6 +38,11 @@ agree on whether a submitted record should be accepted.
 The consensus method we choose in the unanimous consensus as it verifys all data before goign in etc.. (write it in report lol)
 '''
 # Todo: • Implement the selected consensus mechanism (in a simplified form) to determine whether a newly submitted record should be accepted or rejected.
+'''
+Braingstorm: 
+ - need to implement a consensus function where we have the sender and receiver however this time we dont encrypt the signature and just send the package to everyone... 
+ - if all == true: then add record to receiver else: print("Error record did not reach consensus")
+'''
 # Todo: • Ensure that all inventory nodes reach a consistent decision before the record is stored locally.
 # Todo: • After a successful consensus outcome, store the accepted record in each inventory node’s local database.
 
