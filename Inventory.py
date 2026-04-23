@@ -72,7 +72,7 @@ class Record:
         item_qty = self.item_qty if self.item_qty is not None else "null"
         item_price = self.item_price if self.item_price is not None else "null"
         location = self.location if self.location is not None else "null"
-        return f"{item_id},{item_qty},{item_price},{location}"
+        return f"{item_id},{item_qty},{item_price},{self.location}"
 
 # We can create an object class where each invertory will have there values for p,q and e respectfully
 class Inventory:
@@ -157,6 +157,7 @@ class Inventory:
         - then add that encyrpted message to a txt file called "package{self.name}to{receviers.name}
         '''
 
+        #todo: need to fix and ensure package is encrytped before sending the data 
         # first we will need to hash our record
         hashed = self.hash_record(item_index)
         # singing our record
