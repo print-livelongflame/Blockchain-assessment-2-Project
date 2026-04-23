@@ -69,3 +69,20 @@ agree on whether a submitted record should be accepted.
 # Todo: • Implement the selected consensus mechanism (in a simplified form) to determine whether a newly submitted record should be accepted or rejected.
 # Todo: • Ensure that all inventory nodes reach a consistent decision before the record is stored locally.
 # Todo: • After a successful consensus outcome, store the accepted record in each inventory node’s local database.
+
+
+# ------= Creating UI for use to interact with ---- 
+'''
+This is where You will need to build the terminal cli for users to interact with. 
+You can do something like this layout:
+
+1. Task1
+2. Task2
+
+Select Task: "Task1"
+
+Welcome to Task1:
+1. Add a Record
+2. Send a Record 
+3. print out Inventory's information
+'''
