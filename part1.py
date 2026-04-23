@@ -86,3 +86,21 @@ Welcome to Task1:
 2. Send a Record 
 3. print out Inventory's information
 '''
+
+print("!!!Welcome to Part 1!!!")
+print("\n1. Task 1\n2. Task 2\n")
+exit = False
+while exit != True:
+    user_in = str(input("\nSelect Task: "))
+    if user_in.lower() == "exit":
+        exit = True
+    elif user_in.lower() == "1":
+        print("!!!Welcome to Task 1 !!!")
+        print("\n1. Print Inventory's\n2. Add an Record\n3. Send a Record")
+        action_t1 = str(input("Pick what you like to do"))
+        #todo-- need to finish user selecting
+    elif user_in.lower() == "2":
+        print("!!!Welcome to Task 2 !!!")
+    else: 
+        print("Please enter a valid number (E.g. 1 or 2)")
+        
