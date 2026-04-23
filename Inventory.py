@@ -129,9 +129,6 @@ class Inventory:
     # Verification checks if the signed hash is valid 
     def verification(self, h1,  signed_message, e, n ):
         h2  = pow(signed_message,e,n)
-
-        print(f"H1 is : {h1}\n compared to: {h2}")
-
         if h1 == h2:
             return True
         else:
@@ -156,15 +153,17 @@ class Inventory:
         - then add that encyrpted message to a txt file called "package{self.name}to{receviers.name}
         '''
 
-        # Encryptiung the message
-        encrypted_message = self.encrypt(self.sign_record(self.hash_record(item_index)),inventory_recevier.e, inventory_recevier.n)
-        # creating a string for the singed record and oringinal message
-        package = f"{self.records[item_index].get_record()}|{encrypted_message}"    
+        # first we will need to hash our record
+        hashed = self.hash_record(item_index)
+        # singing our record
+        signature = self.sign_record(hashed)
 
-        # creating txt file
+        # creating package for us to send
+        package = f"{self.records[item_index].get_record()}|{signature}"
+
         filename = f"package{self.name}to{inventory_recevier.name}.txt"
-        with open(filename,"w") as f:
-            f.write(str(package))
+        with open(filename, "w") as f:
+            f.write(package)
 
         print(f"Sent package: {filename}")
 
@@ -193,21 +192,23 @@ class Inventory:
         h1 =  hash(message)
 
         # now we will need to decrypt the signed message
-        decrypted_messsage =  self.decrypt(encrypted_message,self.private_key[1],self.n)
-        print(f"the decrypted message is {decrypted_messsage}")
-
         # then we can verify the signature placed on  the message
-        if self.verification(h1, decrypted_messsage,inventory_sender.e, inventory_sender.n):
+        if self.verification(h1, encrypted_message,inventory_sender.e, inventory_sender.n):
             print("Record verfied....\nAdding Record")
+            # Now to add a new record
+            parts = message.split(",")
+
+            item_id = int(parts[0])
+            item_qty = parts[1]
+            item_price = parts[2]
+            location = parts[3]
+
+            new_record = Record(item_id, item_qty, item_price, location)
+
+            self.add_record(new_record)
         else:
             print("Record Rejected!!!")
 
-        
-
-
-
-
-        
     # Prints information of the keys of the object
     def info_keys(self):
         print(f"\nThe keys of the invertory are: \n Private Key {self.private_key} \n Public Key: {self.public_key}")
