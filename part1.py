@@ -87,20 +87,157 @@ Welcome to Task1:
 3. print out Inventory's information
 '''
 
-print("!!!Welcome to Part 1!!!")
-print("\n1. Task 1\n2. Task 2\n")
-exit = False
-while exit != True:
-    user_in = str(input("\nSelect Task: "))
-    if user_in.lower() == "exit":
-        exit = True
-    elif user_in.lower() == "1":
-        print("!!!Welcome to Task 1 !!!")
-        print("\n1. Print Inventory's\n2. Add an Record\n3. Send a Record")
-        action_t1 = str(input("Pick what you like to do"))
-        #todo-- need to finish user selecting
-    elif user_in.lower() == "2":
-        print("!!!Welcome to Task 2 !!!")
-    else: 
-        print("Please enter a valid number (E.g. 1 or 2)")
-        
+# Added mappings to make it easier to refactor code
+inventories = {
+    "A": inver_A,
+    "B": inver_B,
+    "C": inver_C,
+    "D": inver_D
+}
+
+# differnet tasks to help
+def main_menu():
+    print("\n=== MAIN MENU ===")
+    print("1. Task 1")
+    print("2. Task 2")
+    print("Type 'exit' to quit")
+
+
+def task1_menu():
+    print("\n=== TASK 1 MENU ===")
+    print("1. View Inventories")
+    print("2. Add Record")
+    print("3. Send & Verify Record")
+    print("Type 'back' to return")
+
+
+def show_inventories():
+    print("\n--- ALL INVENTORIES ---")
+    inver_A.info_records()
+    inver_B.info_records()
+    inver_C.info_records()
+    inver_D.info_records()  
+
+def select_inventory(prompt):
+    print("\nSelect Inventory:")
+    for key in inventories:
+        print(f"{key}", end="  ")
+    print()
+
+    choice = input(f"{prompt} (A-D): ").upper()
+
+    if choice in inventories:
+        return inventories[choice], choice
+    else:
+        print("Invalid selection.")
+        return None, None
+
+
+def select_record(inventory):
+    if len(inventory.records) == 0:
+        print("No records available.")
+        return None
+
+    print("\nAvailable Records:")
+    inventory.info_records()
+
+    try:
+        index = int(input("Select record index: "))
+        if 0 <= index < len(inventory.records):
+            return index
+        else:
+            print("Invalid index.")
+            return None
+    except:
+        print("Invalid input.")
+        return None
+
+
+def add_record_ui():
+    inv_obj, inv_name = select_inventory("Add record to")
+    if inv_obj is None:
+        return
+
+    try:
+        item_id = int(input("Enter item ID: "))
+        item_qty = input("Enter quantity: ")
+        item_price = input("Enter price: ")
+
+        record = Record(item_id, item_qty, item_price, inv_name)
+        inv_obj.add_record(record)
+
+        print(f"\nRecord added to Inventory {inv_name}")
+    except:
+        print("Invalid input. Record not added.")
+
+
+def send_verify_ui():
+    print("\n--- SEND & VERIFY ---")
+
+    sender_obj, sender_name = select_inventory("Select sender")
+    if sender_obj is None:
+        return
+
+    receiver_obj, receiver_name = select_inventory("Select receiver")
+    if receiver_obj is None or receiver_name == sender_name:
+        print("Invalid receiver.")
+        return
+
+    record_index = select_record(sender_obj)
+    if record_index is None:
+        return
+
+    print(f"\nSending record [{record_index}] from {sender_name} -> {receiver_name}")
+
+    sender_obj.send_data_to(record_index, receiver_obj)
+
+    filename = f"package{sender_name}to{receiver_name}.txt"
+    print(f"Verifying at Inventory {receiver_name}...")
+
+    receiver_obj.recevie_data_from(filename, sender_obj)
+
+    print("\nUpdated Receiver Inventory:")
+    receiver_obj.info_records()
+
+
+#------- Main loop ---- 
+print("=== Distributed Inventory System ===")
+
+running = True
+
+while running:
+    main_menu()
+    choice = input("\nSelect option: ").lower()
+
+    if choice == "exit":
+        running = False
+
+    elif choice == "1":
+        print("\n--- TASK 1 ---")
+
+        while True:
+            task1_menu()
+            t1_choice = input("\nChoose option: ").lower()
+
+            if t1_choice == "1":
+                show_inventories()
+
+            elif t1_choice == "2":
+                add_record_ui()
+
+            elif t1_choice == "3":
+                send_verify_ui()
+
+            elif t1_choice == "back":
+                break
+
+            else:
+                print("Invalid option.")
+
+    elif choice == "2":
+        print("\n--- TASK 2 (Not implemented yet) ---")
+
+    else:
+        print("Invalid option.")
+
+print("\nGoodbye and haven an amazing day :)")

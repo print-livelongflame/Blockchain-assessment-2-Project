@@ -61,14 +61,18 @@ def hash(message, fixed_length=32):
 
 # ------------------- Objects --------------------------
 class Record:
-    def __init__(self, item_id, item_qty, item_price, location):
+    def __init__(self, item_id=None, item_qty=None, item_price=None, location=None):
         self.item_id = item_id
         self.item_qty = item_qty
         self.item_price = item_price
         self.location = location
 
     def get_record(self) -> str:
-        return f"{self.item_id},{self.item_qty},{self.item_price},{self.location}"
+        item_id = self.item_id if self.item_id is not None else "null"
+        item_qty = self.item_qty if self.item_qty is not None else "null"
+        item_price = self.item_price if self.item_price is not None else "null"
+        location = self.location if self.location is not None else "null"
+        return f"{item_id},{item_qty},{item_price},{location}"
 
 # We can create an object class where each invertory will have there values for p,q and e respectfully
 class Inventory:
