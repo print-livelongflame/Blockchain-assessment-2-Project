@@ -1,5 +1,5 @@
 '''
-Aurthors: Valentino Osorio Schwarz, Thomas McCarthy
+Authors: Valentino Osorio Schwarz, Thomas McCarthy
 
 Note:
 For every task you do just add your name next to task. E.g. 1. Build this thing (Valentino).
