@@ -146,61 +146,95 @@ class Inventory:
         hashed_record = hash(record)
         return hashed_record
 
+  
     # Sending the data to another inventory
     def send_data_to(self, item_index, inventory_recevier):
         '''
-        idea: 
-        - we createa a main funciton where we take in the record we want to send and who we want to send to 
-        - then we hash it 
-        - sign it
-        - then get the string of "message|signed message" and encrypt it with the receviers public key
-        - then add that encyrpted message to a txt file called "package{self.name}to{receviers.name}
+        Steps:
+        1. Hash record
+        2. Sign hash with sender private key
+        3. Build package = message|signature
+        4. Encrypt FULL package using receiver public key
+        5. Save encrypted package
         '''
 
-        #todo: need to fix and ensure package is encrytped before sending the data 
-        # first we will need to hash our record
+        # hash record
         hashed = self.hash_record(item_index)
-        # singing our record
+
+        # sign record
         signature = self.sign_record(hashed)
 
-        # creating package for us to send
-        package = f"{self.records[item_index].get_record()}|{signature}"
+        # original message
+        message = self.records[item_index].get_record()
+
+        # package before encryption
+        package = f"{message}|{signature}"
+
+        # convert string package into numbers
+        encrypted_package = []
+
+        for char in package:
+            encrypted_char = self.encrypt(
+                ord(char),
+                inventory_recevier.e,
+                inventory_recevier.n
+            )
+            encrypted_package.append(str(encrypted_char))
 
         filename = f"package{self.name}to{inventory_recevier.name}.txt"
+
         with open(filename, "w") as f:
-            f.write(package)
+            f.write(",".join(encrypted_package))
 
-        print(f"Sent package: {filename}")
+        print(f"Sent encrypted package: {filename}")
 
-    # Reciving data 
-    def recevie_data_from(self,package_name, inventory_sender):
+
+    # Receiving data
+    def recevie_data_from(self, package_name, inventory_sender):
         '''
-        idea:
-        - Read the package with the specifc name 
-        - decryupt the message with private key
-        - spilt the data into two different segments "|"
-        - hash the message
-        - call verification (hash of message)
-        - if return true then add the record 
-        - else: reject the record
+        Steps:
+        1. Read encrypted package
+        2. Decrypt package with own private key
+        3. Split message|signature
+        4. Hash message
+        5. Verify signature using sender public key
+        6. Add record if valid
         '''
-        # first we will need to read the packaage
+
+        # read encrypted file
         with open(package_name, "r") as f:
-            package_sent = f.read()
+            encrypted_data = f.read()
 
-        # we first need to spilt the data
-        package  = package_sent.split("|")
-        message =   package[0]
-        encrypted_message = int(package[1])
+        encrypted_values = encrypted_data.split(",")
 
-        # then we can hash the message we got  and store it 
-        h1 =  hash(message)
+        # decrypt full package
+        decrypted_package = ""
 
-        # now we will need to decrypt the signed message
-        # then we can verify the signature placed on  the message
-        if self.verification(h1, encrypted_message,inventory_sender.e, inventory_sender.n):
-            print("Record verfied....\nAdding Record")
-            # Now to add a new record
+        for value in encrypted_values:
+            decrypted_char = self.decrypt(
+                int(value),
+                self.private_key[1],
+                self.n
+            )
+            decrypted_package += chr(decrypted_char)
+
+        # split message and signature
+        package = decrypted_package.split("|")
+        message = package[0]
+        signed_message = int(package[1])
+
+        # hash received message
+        h1 = hash(message)
+
+        # verify sender signature
+        if self.verification(
+            h1,
+            signed_message,
+            inventory_sender.e,
+            inventory_sender.n
+        ):
+            print("Record verified...\nAdding Record")
+
             parts = message.split(",")
 
             item_id = int(parts[0])
@@ -211,8 +245,9 @@ class Inventory:
             new_record = Record(item_id, item_qty, item_price, location)
 
             self.add_record(new_record)
+
         else:
-            print("Record Rejected!!!")
+            print("Record Rejected!!!") 
 
     # Prints information of the keys of the object
     def info_keys(self):

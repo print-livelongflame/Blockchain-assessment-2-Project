@@ -24,6 +24,7 @@ private_key_A, public_key_A = inver_A.generate_keys()
 private_key_B, public_key_B = inver_B.generate_keys()
 private_key_C, public_key_C = inver_C.generate_keys()
 private_key_D, public_key_D = inver_D.generate_keys()
+
     
 # Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
 
