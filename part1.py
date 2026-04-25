@@ -1,14 +1,6 @@
 '''
-Authors: Valentino Osorio Schwarz, Thomas McCarthy
-
-Note:
-For every task you do just add your name next to task. E.g. 1. Build this thing (Valentino).
-This should help us know who is working on what. 
-
-Also leave comments so other person knows what is happing within your code :)
-
-Note: When finsihed with the task just delete the "Todo" so we know its all done
-
+Authors: Valentino Osorio Schwarz
+This code is for part 1 where we have implemented both task1 and task2
 '''
 # ------ Part 1 ------ 
 # Todo: • Select and justify an appropriate consensus mechanism for the given scenario, explaining how it ensures global agreement and handles inconsistent or malicious updates, including key trade-offs.
@@ -21,13 +13,14 @@ inver_B = Inventory(787435686772982288169641922308628444877260947, 1325305233886
 inver_C = Inventory(1014247300991039444864201518275018240361205111, 904030450302158058469475048755214591704639633,158749422015035388438057, "C" )
 inver_D = Inventory(1287737200891425621338551020762858710281638317,1330909125725073469794953234151525201084537607, 33981230465225879849295979, "D")
 
-# Initialsing keys
+# Initialising keys for each inventory
 private_key_A, public_key_A = inver_A.generate_keys()
 private_key_B, public_key_B = inver_B.generate_keys()
 private_key_C, public_key_C = inver_C.generate_keys()
 private_key_D, public_key_D = inver_D.generate_keys()
 
 
+# Function is used to unanimous consensus where each record receives the signature and the hashed message and then verifies if valid. If all inventorys are True then add the record else Reject the Record
 def unanimous_consensus(sender, record_index, all_inventorys):
     message  = sender.records[record_index].get_record()
     hashed = hash(message)
@@ -97,10 +90,12 @@ def task2_consensus_ui():
 
     print("\n--- UNANIMOUS CONSENSUS ---")
 
-    sender_obj, sender_name = select_inventory("Select sender")
+    sender_obj = select_inventory("Select sender")
+    #check if there exitsts an sender 
     if sender_obj is None:
         return
 
+    # checks if the record index exists 
     record_index = select_record(sender_obj)
     if record_index is None:
         return
@@ -175,6 +170,7 @@ def add_record_ui():
 def send_verify_ui():
     print("\n--- SEND & VERIFY ---")
 
+    # checking 
     sender_obj, sender_name = select_inventory("Select sender")
     if sender_obj is None:
         return
@@ -188,6 +184,7 @@ def send_verify_ui():
     if record_index is None:
         return
 
+    # Main logic for sending 
     print(f"\nSending record [{record_index}] from {sender_name} -> {receiver_name}")
 
     sender_obj.send_data_to(record_index, receiver_obj)

@@ -101,10 +101,10 @@ class Inventory:
 
          
         # finding d with mod inverse
-        d = mod_inverse(self.e, phi)
+        self.d = mod_inverse(self.e, phi)
 
         self.public_key = (self.n,self.e)
-        self.private_key = (self.n,d)
+        self.private_key = (self.n,self.d)
 
         return self.private_key,self.public_key
 
@@ -127,7 +127,7 @@ class Inventory:
     # Signing the message record we get
     # S = H(m)^d mod n
     def sign_record(self, hashed_record):
-        self.signed_record = pow(hashed_record, self.private_key[1], self.n)
+        self.signed_record = pow(hashed_record, self.d, self.n)
         return self.signed_record
 
     # Verification checks if the signed hash is valid 
