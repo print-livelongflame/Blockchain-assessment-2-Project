@@ -11,6 +11,8 @@ Note: When finsihed with the task just delete the "Todo" so we know its all done
 
 '''
 # ------ Part 1 ------ 
+# Todo: • Select and justify an appropriate consensus mechanism for the given scenario, explaining how it ensures global agreement and handles inconsistent or malicious updates, including key trade-offs.
+# Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
 from Inventory import *
 
 # Initialising invertorys
@@ -25,45 +27,42 @@ private_key_B, public_key_B = inver_B.generate_keys()
 private_key_C, public_key_C = inver_C.generate_keys()
 private_key_D, public_key_D = inver_D.generate_keys()
 
+
+def unanimous_consensus(sender, record_index, all_inventorys):
+    message  = sender.records[record_index].get_record()
+    hashed = hash(message)
+    signature = sender.sign_record(hashed) 
+
+    # we can create an array in which allows us toi implement and check if  all the inventorys accpeted  the record
+    votes = []
+
+    for inventory in all_inventorys:
+        valid = inventory.verification(hashed,signature,sender.e,sender.n)
+
+        if valid:
+            print(f"\nInventory {inventory.name} votes ACCEPT")
+            votes.append(True)
+        else:
+            print(f"\nInventory {inventory.name} votes REJECTED")
+            votes.append(False)
     
-# Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
+    # Now after adding all the votes we will need to check if all votes were true
+    # if the votes are not all true then we don't add it and reject 
+    if all(votes):
+        print("\nAll Inventorys agreed and unanioums consensus has been reached")
 
-'''
-Task2:
-To ensure consistent record acceptance across the distributed inventory system, all inventory nodes must
-agree on whether a submitted record should be accepted.
-'''
-# ------- Todos: --------
-# Todo: • Select and justify an appropriate consensus mechanism for the given scenario, explaining how it ensures global agreement and handles inconsistent or malicious updates, including key trade-offs.
-'''
-The consensus method we choose in the unanimous consensus as it verifys all data before goign in etc.. (write it in report lol)
-'''
-# Todo: • Implement the selected consensus mechanism (in a simplified form) to determine whether a newly submitted record should be accepted or rejected.
-'''
-Braingstorm: 
- - need to implement a consensus function where we have the sender and receiver however this time we dont encrypt the signature and just send the package to everyone... 
- - if all == true: then add record to receiver else: print("Error record did not reach consensus")
-'''
-# Todo: • Ensure that all inventory nodes reach a consistent decision before the record is stored locally.
-# Todo: • After a successful consensus outcome, store the accepted record in each inventory node’s local database.
+        comnpoents = message.split(",")
 
+        for inventory in all_inventorys:
+            new_record = Record(int(comnpoents[0]), comnpoents[1], comnpoents[2], comnpoents[3])
+            inventory.add_record(new_record)
+
+        print("Record added in All inventories sucessfully")
+    else:
+        print("\nConsesnsus failed. Record Rejected")
+            
 
 # ------= Creating UI for use to interact with ---- 
-'''
-This is where You will need to build the terminal cli for users to interact with. 
-You can do something like this layout:
-
-1. Task1
-2. Task2
-
-Select Task: "Task1"
-
-Welcome to Task1:
-1. Add a Record
-2. Send a Record 
-3. print out Inventory's information
-'''
-
 # Added mappings to make it easier to refactor code
 inventories = {
     "A": inver_A,
@@ -87,6 +86,31 @@ def task1_menu():
     print("3. Send & Verify Record")
     print("Type 'back' to return")
 
+def task2_menu():
+    print("\n=== TASK 2 MENU ===")
+    print("1. View Inventories")
+    print("2. Run Unanimous Consensus")
+    print("Type 'back' to return")
+
+
+def task2_consensus_ui():
+
+    print("\n--- UNANIMOUS CONSENSUS ---")
+
+    sender_obj, sender_name = select_inventory("Select sender")
+    if sender_obj is None:
+        return
+
+    record_index = select_record(sender_obj)
+    if record_index is None:
+        return
+
+    all_nodes = [inver_A, inver_B, inver_C, inver_D]
+
+    unanimous_consensus(sender_obj, record_index, all_nodes)
+
+    print("\nUpdated Inventories:")
+    show_inventories()
 
 def show_inventories():
     print("\n--- ALL INVENTORIES ---")
@@ -212,7 +236,22 @@ while running:
                 print("Invalid option.")
 
     elif choice == "2":
-        print("\n--- TASK 2 (Not implemented yet) ---")
+        print("\n--- TASK 2 ---")
+        while True:
+            task2_menu()
+            t2_choice = input("\nChoose option: ").lower()
+
+            if t2_choice == "1":
+                show_inventories()
+
+            elif t2_choice == "2":
+                task2_consensus_ui()
+
+            elif t2_choice == "back":
+                break
+
+            else:
+                print("Invalid option.")
 
     else:
         print("Invalid option.")
