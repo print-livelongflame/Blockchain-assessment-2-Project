@@ -1,6 +1,6 @@
-# ------ Part 2 ---- 
+# ------ Part 2 ----
 '''
-Task3: 
+Task3:
 When an authorised external user submits a query to retrieve the quantity of a specific inventory item, the
 distributed inventory system must ensure that the returned result is jointly verified, authenticated, and
 securely delivered.
@@ -15,37 +15,32 @@ securely delivered.
 
 
 '''
-Task3 contribution Tom McCarthy
+Task3 contribution - secure record retrieval
 
-I kept the original Task 3 heading and TODO list above so the file still follows
-the current project structure.
+This file keeps Part 2 separate from Part 1 so it does not interfere with the
+record insertion, signing, verification, or consensus code.
 
-The code below starts building the Task 3 workflow separately from Part 1.
-
-Current scope:
+This implementation covers:
 - Procurement Officer query submission
-- inventory lookup
-- secure response delivery using RSA
+- inventory lookup across the inventory nodes
+- PKG key setup using the provided values
+- Harn-style identity-based multi-signature approval
+- aggregation and verification of partial signatures
+- RSA protection of the approved response
 - user-side recovery of the protected response
-
-Note:
-The multi-signature approval stage is currently left as a clearly marked hook
-so the secure delivery workflow can be tested independently first.
 '''
 
-from Inventory import *
+from Inventory import Inventory, Record
 
 
 # ------------------ Helper Functions ------------------
 
-# GCD function
 def gcd(a, b):
     while b != 0:
         a, b = b, a % b
     return a
 
 
-# Modular inverse using Extended Euclidean Algorithm
 def mod_inverse(e, phi):
     a = phi
     b = e
@@ -69,18 +64,75 @@ def mod_inverse(e, phi):
     return x_0 % phi
 
 
-# Converts a normal string into an integer so it can be encrypted with RSA
-def string_to_int(message):
-    return int.from_bytes(message.encode(), byteorder="big")
+# simple deterministic hash function, kept similar to Inventory.py style
+def simple_hash(message, fixed_length=32):
+    hash_value = 0
+    prime_number = 31
+
+    for char in message:
+        hash_value = (hash_value * prime_number + ord(char)) % (2 ** fixed_length)
+
+    return hash_value
 
 
-# Converts an integer back into a normal string after RSA decryption
-def int_to_string(value):
-    try:
-        byte_length = (value.bit_length() + 7) // 8
-        return value.to_bytes(byte_length, byteorder="big").decode()
-    except:
-        return str(value)
+def multiply_mod(values, n):
+    result = 1
+
+    for value in values:
+        result = (result * value) % n
+
+    return result
+
+
+# encrypts a string one character at a time so the message never exceeds n
+def rsa_encrypt_string(message, e, n):
+    encrypted_values = []
+
+    for char in message:
+        encrypted_char = pow(ord(char), e, n)
+        encrypted_values.append(str(encrypted_char))
+
+    return ",".join(encrypted_values)
+
+
+def rsa_decrypt_string(encrypted_message, d, n):
+    decrypted_message = ""
+
+    encrypted_values = encrypted_message.split(",")
+
+    for value in encrypted_values:
+        decrypted_char = pow(int(value), d, n)
+        decrypted_message += chr(decrypted_char)
+
+    return decrypted_message
+
+
+# ------------------ PKG Object ------------------
+
+class PKG:
+    def __init__(self, p, q, e):
+        self.p = p
+        self.q = q
+        self.e = e
+
+    def generate_keys(self):
+        self.n = self.p * self.q
+        phi = (self.p - 1) * (self.q - 1)
+
+        while gcd(self.e, phi) != 1:
+            self.e += 2
+
+        self.d = mod_inverse(self.e, phi)
+
+        self.public_key = (self.n, self.e)
+        self.private_key = (self.n, self.d)
+
+        return self.private_key, self.public_key
+
+    # PKG generates the private signing key for each inventory identity
+    # secret_key = ID^d mod n
+    def generate_secret_key(self, identity):
+        return pow(identity, self.d, self.n)
 
 
 # ------------------ Procurement Officer ------------------
@@ -105,91 +157,224 @@ class ProcurementOfficer:
 
         return self.private_key, self.public_key
 
-    # user submits a query request
     def submit_query(self, item_id):
         print(f"\n[Procurement Officer] Requesting quantity for item ID: {item_id}")
         return item_id
 
-    # decrypt received response
-    def decrypt_response(self, encrypted_value):
-        decrypted_int = pow(encrypted_value, self.private_key[1], self.private_key[0])
-        decrypted_message = int_to_string(decrypted_int)
+    def decrypt_response(self, encrypted_response):
+        decrypted_response = rsa_decrypt_string(
+            encrypted_response,
+            self.private_key[1],
+            self.private_key[0]
+        )
 
-        print(f"[Procurement Officer] Decrypted response: {decrypted_message}")
-        return decrypted_message
+        print(f"[Procurement Officer] Decrypted response: {decrypted_response}")
+        return decrypted_response
+
+
+# ------------------ Harn-Style Multi-Signature ------------------
+
+class HarnMultiSignature:
+    def __init__(self, pkg, node_details):
+        self.pkg = pkg
+        self.node_details = node_details
+
+        # PKG assigns each node a private signing key based on identity
+        for node in self.node_details:
+            node["secret_key"] = self.pkg.generate_secret_key(node["identity"])
+
+            # public random component used for verification
+            node["public_random"] = pow(
+                node["random_value"],
+                self.pkg.e,
+                self.pkg.n
+            )
+
+    # partial signature = secret_key * random^hash(message) mod n
+    def generate_partial_signature(self, node, message):
+        message_hash = simple_hash(message)
+
+        partial_signature = (
+            node["secret_key"] *
+            pow(node["random_value"], message_hash, self.pkg.n)
+        ) % self.pkg.n
+
+        return partial_signature
+
+    # verifies one inventory node's partial signature
+    def verify_partial_signature(self, node, partial_signature, message):
+        message_hash = simple_hash(message)
+
+        left_side = pow(partial_signature, self.pkg.e, self.pkg.n)
+
+        right_side = (
+            node["identity"] *
+            pow(node["public_random"], message_hash, self.pkg.n)
+        ) % self.pkg.n
+
+        return left_side == right_side
+
+    # combines all valid partial signatures into one multi-signature
+    def aggregate_signatures(self, partial_signatures):
+        return multiply_mod(partial_signatures, self.pkg.n)
+
+    # verifies the final aggregated multi-signature
+    def verify_aggregate_signature(self, aggregate_signature, approved_nodes, message):
+        message_hash = simple_hash(message)
+
+        identities = []
+        public_randoms = []
+
+        for node in approved_nodes:
+            identities.append(node["identity"])
+            public_randoms.append(node["public_random"])
+
+        combined_identity = multiply_mod(identities, self.pkg.n)
+        combined_public_random = multiply_mod(public_randoms, self.pkg.n)
+
+        left_side = pow(aggregate_signature, self.pkg.e, self.pkg.n)
+
+        right_side = (
+            combined_identity *
+            pow(combined_public_random, message_hash, self.pkg.n)
+        ) % self.pkg.n
+
+        return left_side == right_side
 
 
 # ------------------ Query System ------------------
 
 class QuerySystem:
-    def __init__(self, inventories, officer):
+    def __init__(self, inventories, officer, multi_signature):
         self.inventories = inventories
         self.officer = officer
+        self.multi_signature = multi_signature
 
-    # looks through inventory records and finds requested item quantity
-    def get_item_quantity(self, item_id):
-        for inventory in self.inventories:
-            for record in inventory.records:
-                if record.item_id == item_id:
-                    return record.item_qty
+    def get_node_quantity(self, inventory, item_id):
+        for record in inventory.records:
+            if record.item_id == item_id:
+                return record.item_qty
+
         return None
 
-    # I left this as a placeholder for now so the secure delivery flow can be tested
-    # without changing the rest of the project structure.
-    # Final version should replace this with the actual multi-signature logic.
-    def multi_signature_approval(self, result):
-        print("\n[System] Multi-signature approval step (placeholder)")
-        print("[System] Inventories A, B, C, and D approve the query result.")
-        return True
+    def get_agreed_quantity(self, item_id):
+        quantities = []
 
-    # encrypt response with Procurement Officer public key
-    def encrypt_response(self, message):
-        message_int = string_to_int(message)
-        encrypted = pow(message_int, self.officer.public_key[1], self.officer.public_key[0])
+        for inventory in self.inventories:
+            quantity = self.get_node_quantity(inventory, item_id)
 
-        print(f"[System] Encrypted response: {encrypted}")
-        return encrypted
+            print(f"[Inventory {inventory.name}] Local query result: {quantity}")
 
-    # full workflow for processing a query
+            if quantity is not None:
+                quantities.append(quantity)
+
+        if len(quantities) == 0:
+            return None
+
+        # checks if all returned quantities match
+        first_quantity = quantities[0]
+
+        for quantity in quantities:
+            if quantity != first_quantity:
+                return None
+
+        return first_quantity
+
+    def multi_signature_approval(self, result_message):
+        print("\n[System] Starting multi-signature approval...")
+
+        partial_signatures = []
+        approved_nodes = []
+
+        for node in self.multi_signature.node_details:
+            partial_signature = self.multi_signature.generate_partial_signature(
+                node,
+                result_message
+            )
+
+            is_valid = self.multi_signature.verify_partial_signature(
+                node,
+                partial_signature,
+                result_message
+            )
+
+            print(f"[Inventory {node['name']}] Partial signature: {partial_signature}")
+            print(f"[Inventory {node['name']}] Partial signature valid: {is_valid}")
+
+            if is_valid:
+                partial_signatures.append(partial_signature)
+                approved_nodes.append(node)
+
+        # require all four inventory nodes to approve
+        if len(approved_nodes) != 4:
+            print("[System] Multi-signature approval failed.")
+            return False, None
+
+        aggregate_signature = self.multi_signature.aggregate_signatures(partial_signatures)
+
+        aggregate_valid = self.multi_signature.verify_aggregate_signature(
+            aggregate_signature,
+            approved_nodes,
+            result_message
+        )
+
+        print(f"\n[System] Aggregated multi-signature: {aggregate_signature}")
+        print(f"[System] Aggregated multi-signature valid: {aggregate_valid}")
+
+        if aggregate_valid:
+            return True, aggregate_signature
+        else:
+            return False, None
+
+    def encrypt_response(self, response_message):
+        encrypted_response = rsa_encrypt_string(
+            response_message,
+            self.officer.public_key[1],
+            self.officer.public_key[0]
+        )
+
+        print(f"\n[System] Encrypted response: {encrypted_response}")
+        return encrypted_response
+
     def process_query(self, item_id):
-        print("\n========== QUERY WORKFLOW ==========")
+        print("\n========== SECURE QUERY WORKFLOW ==========")
 
-        # Step 1: retrieve quantity from inventory
-        quantity = self.get_item_quantity(item_id)
+        quantity = self.get_agreed_quantity(item_id)
 
         if quantity is None:
-            print("[System] Item not found in inventory records.")
+            print("[System] Query failed. Item not found or inventory nodes disagree.")
             print("========== END QUERY ==========\n")
             return
 
-        print(f"[System] Retrieved quantity for item {item_id}: {quantity}")
+        result_message = f"Item {item_id} quantity is {quantity}"
 
-        # Step 2: collective approval of the result
-        approved = self.multi_signature_approval(quantity)
+        print(f"\n[System] Proposed query result: {result_message}")
+
+        approved, aggregate_signature = self.multi_signature_approval(result_message)
 
         if not approved:
-            print("[System] Query result was not approved.")
+            print("[System] Query result was not approved by all inventory nodes.")
             print("========== END QUERY ==========\n")
             return
 
-        # Step 3: prepare response message
-        response_message = f"Item {item_id} quantity is {quantity}"
-        print(f"[System] Response message: {response_message}")
+        response_message = (
+            f"{result_message} | "
+            f"Aggregate Signature: {aggregate_signature}"
+        )
 
-        # Step 4: protect response before sending
         encrypted_response = self.encrypt_response(response_message)
 
-        # Step 5: user recovers protected response
-        recovered_message = self.officer.decrypt_response(encrypted_response)
+        recovered_response = self.officer.decrypt_response(encrypted_response)
 
-        print(f"[System] Recovery successful: {recovered_message}")
+        print(f"[System] Recovery successful: {recovered_response == response_message}")
         print("========== END QUERY ==========\n")
 
 
-# ------------------ Demo Data ------------------
+# ------------------ Demo Setup ------------------
 
-# added small demo records here so part2.py can run on its own during testing
-# without depending on patr1.py
+# Each inventory is initialised here so part2.py can run independently.
+# This simulates the state after Part 1 has already accepted and stored records.
+
 inver_A = Inventory(
     1210613765735147311106936311866593978079938707,
     1247842850282035753615951347964437248190231863,
@@ -207,7 +392,7 @@ inver_B = Inventory(
 inver_C = Inventory(
     1014247300991039444864201518275018240361205111,
     904030450302158058469475048755214591704639633,
-    158749422015035388438057,
+    1158749422015035388438057,
     "C"
 )
 
@@ -218,27 +403,39 @@ inver_D = Inventory(
     "D"
 )
 
-# generate inventory keys
 inver_A.generate_keys()
 inver_B.generate_keys()
 inver_C.generate_keys()
 inver_D.generate_keys()
 
-# add sample records so query retrieval can be demonstrated
-example_record1 = Record(4, "12", "18", "A")
-example_record2 = Record(3, "14", "18", "B")
-example_record3 = Record(2, "20", "14", "C")
-example_record4 = Record(1, "32", "12", "D")
+# same records are added to every node to simulate a consistent distributed inventory state
+accepted_records = [
+    Record(1, "32", "12", "D"),
+    Record(2, "20", "14", "C"),
+    Record(3, "22", "16", "B"),
+    Record(4, "12", "18", "A")
+]
 
-inver_A.add_record(example_record1)
-inver_B.add_record(example_record2)
-inver_C.add_record(example_record3)
-inver_D.add_record(example_record4)
+for record in accepted_records:
+    inver_A.add_record(Record(record.item_id, record.item_qty, record.item_price, record.location))
+    inver_B.add_record(Record(record.item_id, record.item_qty, record.item_price, record.location))
+    inver_C.add_record(Record(record.item_id, record.item_qty, record.item_price, record.location))
+    inver_D.add_record(Record(record.item_id, record.item_qty, record.item_price, record.location))
+
+
+# ------------------ PKG Setup ------------------
+
+pkg = PKG(
+    1004162036461488639338597000466705179253226703,
+    950133741151267522116252385927940618264103623,
+    973028207197278907211
+)
+
+pkg.generate_keys()
 
 
 # ------------------ Procurement Officer Setup ------------------
 
-# values provided in the List of Keys document
 officer = ProcurementOfficer(
     1080954735722463992988394149602856332100628417,
     1158106283320086444890911863299879973542293243,
@@ -248,10 +445,54 @@ officer = ProcurementOfficer(
 officer.generate_keys()
 
 
+# ------------------ Multi-Signature Setup ------------------
+
+node_details = [
+    {
+        "name": "A",
+        "identity": 126,
+        "random_value": 621
+    },
+    {
+        "name": "B",
+        "identity": 127,
+        "random_value": 721
+    },
+    {
+        "name": "C",
+        "identity": 128,
+        "random_value": 821
+    },
+    {
+        "name": "D",
+        "identity": 129,
+        "random_value": 921
+    }
+]
+
+multi_signature = HarnMultiSignature(pkg, node_details)
+
+
 # ------------------ Run Demo ------------------
 
-query_system = QuerySystem([inver_A, inver_B, inver_C, inver_D], officer)
+query_system = QuerySystem(
+    [inver_A, inver_B, inver_C, inver_D],
+    officer,
+    multi_signature
+)
 
-# example query request
-item_requested = officer.submit_query(4)
-query_system.process_query(item_requested)
+print("=== Secure Record Retrieval Demo ===")
+print("This demo queries the distributed inventory system and returns the result securely.")
+
+try:
+    user_input = input("Enter item ID to query, or press Enter to query item 4: ")
+
+    if user_input.strip() == "":
+        item_requested = officer.submit_query(4)
+    else:
+        item_requested = officer.submit_query(int(user_input))
+
+    query_system.process_query(item_requested)
+
+except:
+    print("Invalid input. Query cancelled.")
