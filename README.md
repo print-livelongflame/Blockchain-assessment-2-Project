@@ -1,9 +1,9 @@
 # Blockchain-assessment-2-Project
 This repo is for our blockchain assessment 2 project 
 
-## Progress as of 25/04/26
+## Progress as of 26/04/26
 
-### Part 1 (finished)
+### Part 1 (Finished)
 - RSA-based digital signatures implemented
 - Record signing and verification working across nodes
 - Consensus has been implemented 
@@ -13,3 +13,8 @@ This repo is for our blockchain assessment 2 project
 - Query system implemented
 - Secure response delivery using RSA encryption/decryption
 - Multi-signature approval logic to be integrated
+
+# 
+
+part2updates potential fixes
+- encrypted response is huge and makes the demo output messy.
