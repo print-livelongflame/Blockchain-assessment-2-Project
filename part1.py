@@ -90,7 +90,7 @@ def task2_consensus_ui():
 
     print("\n--- UNANIMOUS CONSENSUS ---")
 
-    sender_obj = select_inventory("Select sender")
+    sender_obj,sender_name = select_inventory("Select sender")
     #check if there exitsts an sender 
     if sender_obj is None:
         return
