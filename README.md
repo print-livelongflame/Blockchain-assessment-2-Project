@@ -16,5 +16,6 @@ This repo is for our blockchain assessment 2 project
 
 # 
 
-part2updates potential fixes
-- encrypted response is huge and makes the demo output messy.
+part2updates 27/04/26: 
+- encrypted response is huge and makes the demo output messy. (FIXED)
+- Task 3 is fully working end-to-end. It queries all nodes, ensures agreement, performs multi-signature verification, encrypts the approved response & successfully decrypts it on the user side.
