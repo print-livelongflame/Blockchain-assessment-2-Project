@@ -333,7 +333,10 @@ class QuerySystem:
             self.officer.public_key[0]
         )
 
-        print(f"\n[System] Encrypted response: {encrypted_response}")
+        print("\n[System] Encrypted response generated successfully.")
+        print(f"[System] Encrypted response preview: {encrypted_response[:120]}...")
+        print(f"[System] Encrypted response length: {len(encrypted_response)} characters")
+        print(f"[System] Encryption changed the message: {encrypted_response != response_message}")
         return encrypted_response
 
     def process_query(self, item_id):
