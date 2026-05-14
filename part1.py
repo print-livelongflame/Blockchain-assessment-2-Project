@@ -42,13 +42,31 @@ def unanimous_consensus(sender, record_index, all_inventorys):
     if all(votes):
         print("\nAll Inventorys agreed and unanioums consensus has been reached")
 
-        comnpoents = message.split(",")
+        components = message.split(",")
 
         for inventory in all_inventorys:
-            new_record = Record(int(comnpoents[0]), comnpoents[1], comnpoents[2], comnpoents[3])
-            inventory.add_record(new_record)
+
+            # Check if record already exists
+            already_exists = False
+
+            for record in inventory.records:
+                if record.get_record() == message:
+                    already_exists = True
+                    break
+
+            # Only add if not already there
+            if not already_exists:
+                new_record = Record(
+                    int(components[0]),
+                    components[1],
+                    components[2],
+                    components[3]
+                )
+
+                inventory.add_record(new_record)
 
         print("Record added in All inventories sucessfully")
+
     else:
         print("\nConsesnsus failed. Record Rejected")
             
