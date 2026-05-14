@@ -3,8 +3,6 @@ Authors: Valentino Osorio Schwarz
 This code is for part 1 where we have implemented both task1 and task2
 '''
 # ------ Part 1 ------ 
-# Todo: • Select and justify an appropriate consensus mechanism for the given scenario, explaining how it ensures global agreement and handles inconsistent or malicious updates, including key trade-offs.
-# Todo: • In your report, explain how digital signatures contribute to secure record submission in a distributed inventory environment.
 from Inventory import *
 
 # Initialising invertorys
